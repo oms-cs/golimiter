@@ -1,7 +1,7 @@
 syntax = "proto3";
 package golimiter;
 
-option go_package = "./proto";
+option go_package = "../../gen/go";
 
 service GoLimiter{
         rpc CheckLimit(RateLimitRequest) returns (RateLimitResponse);

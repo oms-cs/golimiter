@@ -2,9 +2,9 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v7.34.0
-// source: proto/rate_limiter.proto
+// source: api/proto/rate_limiter.proto
 
-package proto
+package _go
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -31,7 +31,7 @@ type RateLimitRequest struct {
 
 func (x *RateLimitRequest) Reset() {
 	*x = RateLimitRequest{}
-	mi := &file_proto_rate_limiter_proto_msgTypes[0]
+	mi := &file_api_proto_rate_limiter_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -43,7 +43,7 @@ func (x *RateLimitRequest) String() string {
 func (*RateLimitRequest) ProtoMessage() {}
 
 func (x *RateLimitRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_rate_limiter_proto_msgTypes[0]
+	mi := &file_api_proto_rate_limiter_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -56,7 +56,7 @@ func (x *RateLimitRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RateLimitRequest.ProtoReflect.Descriptor instead.
 func (*RateLimitRequest) Descriptor() ([]byte, []int) {
-	return file_proto_rate_limiter_proto_rawDescGZIP(), []int{0}
+	return file_api_proto_rate_limiter_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *RateLimitRequest) GetPath() string {
@@ -83,7 +83,7 @@ type Key struct {
 
 func (x *Key) Reset() {
 	*x = Key{}
-	mi := &file_proto_rate_limiter_proto_msgTypes[1]
+	mi := &file_api_proto_rate_limiter_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -95,7 +95,7 @@ func (x *Key) String() string {
 func (*Key) ProtoMessage() {}
 
 func (x *Key) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_rate_limiter_proto_msgTypes[1]
+	mi := &file_api_proto_rate_limiter_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -108,7 +108,7 @@ func (x *Key) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Key.ProtoReflect.Descriptor instead.
 func (*Key) Descriptor() ([]byte, []int) {
-	return file_proto_rate_limiter_proto_rawDescGZIP(), []int{1}
+	return file_api_proto_rate_limiter_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Key) GetType() string {
@@ -136,7 +136,7 @@ type RateLimitResponse struct {
 
 func (x *RateLimitResponse) Reset() {
 	*x = RateLimitResponse{}
-	mi := &file_proto_rate_limiter_proto_msgTypes[2]
+	mi := &file_api_proto_rate_limiter_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -148,7 +148,7 @@ func (x *RateLimitResponse) String() string {
 func (*RateLimitResponse) ProtoMessage() {}
 
 func (x *RateLimitResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_rate_limiter_proto_msgTypes[2]
+	mi := &file_api_proto_rate_limiter_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -161,7 +161,7 @@ func (x *RateLimitResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RateLimitResponse.ProtoReflect.Descriptor instead.
 func (*RateLimitResponse) Descriptor() ([]byte, []int) {
-	return file_proto_rate_limiter_proto_rawDescGZIP(), []int{2}
+	return file_api_proto_rate_limiter_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *RateLimitResponse) GetIsAllowed() bool {
@@ -185,11 +185,11 @@ func (x *RateLimitResponse) GetTryAgainDuration() int64 {
 	return 0
 }
 
-var File_proto_rate_limiter_proto protoreflect.FileDescriptor
+var File_api_proto_rate_limiter_proto protoreflect.FileDescriptor
 
-const file_proto_rate_limiter_proto_rawDesc = "" +
+const file_api_proto_rate_limiter_proto_rawDesc = "" +
 	"\n" +
-	"\x18proto/rate_limiter.proto\x12\tgolimiter\"J\n" +
+	"\x1capi/proto/rate_limiter.proto\x12\tgolimiter\"J\n" +
 	"\x10RateLimitRequest\x12\x12\n" +
 	"\x04path\x18\x01 \x01(\tR\x04path\x12\"\n" +
 	"\x04keys\x18\x02 \x03(\v2\x0e.golimiter.KeyR\x04keys\"/\n" +
@@ -203,27 +203,27 @@ const file_proto_rate_limiter_proto_rawDesc = "" +
 	"\x12try_again_duration\x18\x03 \x01(\x03R\x10tryAgainDuration2T\n" +
 	"\tGoLimiter\x12G\n" +
 	"\n" +
-	"CheckLimit\x12\x1b.golimiter.RateLimitRequest\x1a\x1c.golimiter.RateLimitResponseB\tZ\a./protob\x06proto3"
+	"CheckLimit\x12\x1b.golimiter.RateLimitRequest\x1a\x1c.golimiter.RateLimitResponseB\bZ\x06gen/gob\x06proto3"
 
 var (
-	file_proto_rate_limiter_proto_rawDescOnce sync.Once
-	file_proto_rate_limiter_proto_rawDescData []byte
+	file_api_proto_rate_limiter_proto_rawDescOnce sync.Once
+	file_api_proto_rate_limiter_proto_rawDescData []byte
 )
 
-func file_proto_rate_limiter_proto_rawDescGZIP() []byte {
-	file_proto_rate_limiter_proto_rawDescOnce.Do(func() {
-		file_proto_rate_limiter_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_rate_limiter_proto_rawDesc), len(file_proto_rate_limiter_proto_rawDesc)))
+func file_api_proto_rate_limiter_proto_rawDescGZIP() []byte {
+	file_api_proto_rate_limiter_proto_rawDescOnce.Do(func() {
+		file_api_proto_rate_limiter_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_api_proto_rate_limiter_proto_rawDesc), len(file_api_proto_rate_limiter_proto_rawDesc)))
 	})
-	return file_proto_rate_limiter_proto_rawDescData
+	return file_api_proto_rate_limiter_proto_rawDescData
 }
 
-var file_proto_rate_limiter_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
-var file_proto_rate_limiter_proto_goTypes = []any{
+var file_api_proto_rate_limiter_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_api_proto_rate_limiter_proto_goTypes = []any{
 	(*RateLimitRequest)(nil),  // 0: golimiter.RateLimitRequest
 	(*Key)(nil),               // 1: golimiter.Key
 	(*RateLimitResponse)(nil), // 2: golimiter.RateLimitResponse
 }
-var file_proto_rate_limiter_proto_depIdxs = []int32{
+var file_api_proto_rate_limiter_proto_depIdxs = []int32{
 	1, // 0: golimiter.RateLimitRequest.keys:type_name -> golimiter.Key
 	0, // 1: golimiter.GoLimiter.CheckLimit:input_type -> golimiter.RateLimitRequest
 	2, // 2: golimiter.GoLimiter.CheckLimit:output_type -> golimiter.RateLimitResponse
@@ -234,26 +234,26 @@ var file_proto_rate_limiter_proto_depIdxs = []int32{
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_proto_rate_limiter_proto_init() }
-func file_proto_rate_limiter_proto_init() {
-	if File_proto_rate_limiter_proto != nil {
+func init() { file_api_proto_rate_limiter_proto_init() }
+func file_api_proto_rate_limiter_proto_init() {
+	if File_api_proto_rate_limiter_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_rate_limiter_proto_rawDesc), len(file_proto_rate_limiter_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_rate_limiter_proto_rawDesc), len(file_api_proto_rate_limiter_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_proto_rate_limiter_proto_goTypes,
-		DependencyIndexes: file_proto_rate_limiter_proto_depIdxs,
-		MessageInfos:      file_proto_rate_limiter_proto_msgTypes,
+		GoTypes:           file_api_proto_rate_limiter_proto_goTypes,
+		DependencyIndexes: file_api_proto_rate_limiter_proto_depIdxs,
+		MessageInfos:      file_api_proto_rate_limiter_proto_msgTypes,
 	}.Build()
-	File_proto_rate_limiter_proto = out.File
-	file_proto_rate_limiter_proto_goTypes = nil
-	file_proto_rate_limiter_proto_depIdxs = nil
+	File_api_proto_rate_limiter_proto = out.File
+	file_api_proto_rate_limiter_proto_goTypes = nil
+	file_api_proto_rate_limiter_proto_depIdxs = nil
 }

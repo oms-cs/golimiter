@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.1
 // - protoc             v7.34.0
-// source: proto/rate_limiter.proto
+// source: api/proto/rate_limiter.proto
 
-package proto
+package _go
 
 import (
 	context "context"
@@ -117,5 +117,5 @@ var GoLimiter_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/rate_limiter.proto",
+	Metadata: "api/proto/rate_limiter.proto",
 }

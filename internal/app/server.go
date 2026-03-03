@@ -1,19 +1,12 @@
-package main
+package app
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
-	"time"
 
-	"github.com/omscs/golimiter/proto"
+	proto "github.com/omscs/golimiter/gen/go"
 	"google.golang.org/grpc"
-)
-
-const (
-	defaultExpirationTime = 2 * time.Minute
-	sleepTime             = 2 * time.Second
 )
 
 type server struct {
@@ -27,17 +20,17 @@ func (s *server) CheckLimit(ctx context.Context, req *proto.RateLimitRequest) (*
 	}, nil
 }
 
-func main() {
-	fmt.Printf("Hello world! \n")
-	lis, err := net.Listen("tcp", ":50051")
+type Config struct {
+	Port string
+}
+
+func Run(cfg Config) error {
+	lis, err := net.Listen("tcp", ":"+cfg.Port)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	s := grpc.NewServer()
 	proto.RegisterGoLimiterServer(s, &server{})
-
-	log.Println("Server is running on port :50051...")
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
-	}
+	log.Printf("Server is running on port : %s... \n", cfg.Port)
+	return s.Serve(lis)
 }

@@ -1,12 +1,13 @@
 resources:
-  - method: POST
-    path: "/purchase"
+  - service: "product-service"
+    method: GET
+    path: "/products"
+    algorithm: sliding_window_counter
     rules:
       limits:
         - window_seconds: 10
           limit: 10
         - window_seconds: 60
           limit: 50
-          algorithm: sliding_window_counter
         - window_seconds: 86400
           limit: 1000
