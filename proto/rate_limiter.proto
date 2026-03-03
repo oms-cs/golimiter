@@ -1,0 +1,25 @@
+syntax = "proto3";
+package golimiter;
+
+option go_package = "./proto";
+
+service GoLimiter{
+        rpc CheckLimit(RateLimitRequest) returns (RateLimitResponse);
+    }
+
+
+message RateLimitRequest{
+        string path = 1;
+        repeated Key keys = 2;
+    }
+
+message Key{
+        string type = 1;
+        string value = 2;
+    }
+
+message RateLimitResponse{
+        bool is_allowed = 1;
+        int32 remaining_tokens = 2;
+        int64 try_again_duration = 3;
+    }
