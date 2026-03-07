@@ -17,11 +17,13 @@ func NewSlidingWindowCounter() RateLimiter {
 }
 
 // IsAllowed checks if the request is allowed based on sliding window counter algorithm
-func (swc *SlidingWindowCounter) IsAllowed(req *proto.RateLimitRequest) bool {
-	allowed, err := swc.ExecuteScript(req)
+func (swc *SlidingWindowCounter) IsAllowed(req *proto.RateLimitRequest) *proto.RateLimitResponse {
+	res, err := swc.ExecuteScript(req)
 	if err != nil {
 		// Log error but default to allowing the request to avoid service disruption
-		return true
+		return &proto.RateLimitResponse{
+			IsAllowed: true,
+		}
 	}
-	return allowed
+	return res
 }

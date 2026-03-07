@@ -6,5 +6,5 @@ import (
 
 // RateLimiter defines the interface for all rate limiting algorithms
 type RateLimiter interface {
-	IsAllowed(req *proto.RateLimitRequest) bool
+	IsAllowed(req *proto.RateLimitRequest) *proto.RateLimitResponse
 }
