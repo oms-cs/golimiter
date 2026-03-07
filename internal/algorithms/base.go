@@ -75,7 +75,7 @@ func (ba *BaseAlgorithm) ExecuteScript(req *proto.RateLimitRequest) (*proto.Rate
 		}, fmt.Errorf("failed to convert result to int")
 	}
 
-	fmt.Printf("Rate limit result: %s\n", isAllowedVal)
+	fmt.Printf("Rate limit result: %d\n", isAllowedVal)
 
 	// Parse the actual result (assuming "1" means allowed, "0" means denied)
 	return &proto.RateLimitResponse{
