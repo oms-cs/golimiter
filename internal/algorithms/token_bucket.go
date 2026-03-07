@@ -1,45 +1,28 @@
 package algorithms
 
 import (
-	"context"
-	"fmt"
-	"os"
-	"path/filepath"
-
 	proto "github.com/omscs/golimiter/gen/go"
-	"github.com/omscs/golimiter/internal/infrastructure"
 )
 
-type tokenBucket struct {
+// TokenBucket implements token bucket rate limiting algorithm
+type TokenBucket struct {
+	*BaseAlgorithm
 }
 
-func (tb *tokenBucket) IsAllowed(req *proto.RateLimitRequest) bool {
-	fmt.Printf("received req from remote address : %s \n", req.Path)
-
-	redis := infrastructure.RedisClient()
-	ctx := context.Background()
-
-	//Read lua Script Path
-	filePath := filepath.Join("scripts", "token_bucket.lua")
-	keys := make([]string, len(req.Keys))
-
-	for _, key := range req.Keys {
-		keys = append(keys, key.Value)
+// NewTokenBucket creates a new token bucket rate limiter
+func NewTokenBucket() RateLimiter {
+	return &TokenBucket{
+		BaseAlgorithm: NewBaseAlgorithm("token_bucket"),
 	}
+}
 
-	luaScript, err := os.ReadFile(filePath)
+// IsAllowed checks if the request is allowed based on token bucket algorithm
+func (tb *TokenBucket) IsAllowed(req *proto.RateLimitRequest) bool {
+	allowed, err := tb.ExecuteScript(req)
 	if err != nil {
-		fmt.Println(err)
+		// Log error but default to allowing the request to avoid service disruption
+		// In production, you might want to use a circuit breaker or other fallback
+		return true
 	}
-
-	result, err := redis.Eval(ctx, string(luaScript), keys).Result()
-	if err != nil {
-		panic(err)
-	}
-
-	vals := result.([]interface{})
-
-	fmt.Println("vals", vals[0].(string))
-
-	return true
+	return allowed
 }

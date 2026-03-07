@@ -1,45 +1,27 @@
 package algorithms
 
 import (
-	"context"
-	"fmt"
-	"os"
-	"path/filepath"
-
 	proto "github.com/omscs/golimiter/gen/go"
-	"github.com/omscs/golimiter/internal/infrastructure"
 )
 
-type slidingWindowLog struct {
+// SlidingWindowLog implements sliding window log rate limiting algorithm
+type SlidingWindowLog struct {
+	*BaseAlgorithm
 }
 
-func (swl *slidingWindowLog) IsAllowed(req *proto.RateLimitRequest) bool {
-	fmt.Printf("received req from remote address : %s \n", req.Path)
-
-	redis := infrastructure.RedisClient()
-	ctx := context.Background()
-
-	//Read lua Script Path
-	filePath := filepath.Join("scripts", "sliding_window_log.lua")
-	keys := make([]string, len(req.Keys))
-
-	for _, key := range req.Keys {
-		keys = append(keys, key.Value)
+// NewSlidingWindowLog creates a new sliding window log rate limiter
+func NewSlidingWindowLog() RateLimiter {
+	return &SlidingWindowLog{
+		BaseAlgorithm: NewBaseAlgorithm("sliding_window_log"),
 	}
+}
 
-	luaScript, err := os.ReadFile(filePath)
+// IsAllowed checks if the request is allowed based on sliding window log algorithm
+func (swl *SlidingWindowLog) IsAllowed(req *proto.RateLimitRequest) bool {
+	allowed, err := swl.ExecuteScript(req)
 	if err != nil {
-		fmt.Println(err)
+		// Log error but default to allowing the request to avoid service disruption
+		return true
 	}
-
-	result, err := redis.Eval(ctx, string(luaScript), keys).Result()
-	if err != nil {
-		panic(err)
-	}
-
-	vals := result.([]interface{})
-
-	fmt.Println("vals", vals[0].(string))
-
-	return true
+	return allowed
 }

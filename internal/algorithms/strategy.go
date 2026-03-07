@@ -4,30 +4,7 @@ import (
 	proto "github.com/omscs/golimiter/gen/go"
 )
 
+// RateLimiter defines the interface for all rate limiting algorithms
 type RateLimiter interface {
 	IsAllowed(req *proto.RateLimitRequest) bool
-}
-
-type TokenBucket struct {
-	*tokenBucket
-}
-
-type SlidingWindowCounter struct {
-	*slidingWindowCounter
-}
-
-type SlidingWindowLog struct {
-	*slidingWindowLog
-}
-
-func NewTokenBucket() RateLimiter {
-	return &TokenBucket{tokenBucket: &tokenBucket{}}
-}
-
-func NewSlidingWindowCounter() RateLimiter {
-	return &SlidingWindowCounter{slidingWindowCounter: &slidingWindowCounter{}}
-}
-
-func NewSlidingWindowLog() RateLimiter {
-	return &SlidingWindowLog{slidingWindowLog: &slidingWindowLog{}}
 }
