@@ -21,7 +21,6 @@ func (swl *SlidingWindowLog) IsAllowed(req *proto.RateLimitRequest) *proto.RateL
 	res, err := swl.ExecuteScript(req)
 	if err != nil {
 		// Log error but default to allowing the request to avoid service disruption
-		// Log error but default to allowing the request to avoid service disruption
 		return &proto.RateLimitResponse{
 			IsAllowed: true,
 		}
