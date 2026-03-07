@@ -33,23 +33,28 @@ for i, limit in ipairs(limits) do
         if value < weight then
             redis.call('HSET', ks, "count", value)
             redis.call('HSET', ks, "ts", now)
-            return 0
+            local request_available_duration = 1 / fill_rate
+            return {0, 0, request_available_duration}
         end
 
         table.insert(updates, {
             key = ks,
             balance = value - weight,
-            ttl = duration
+            ttl = duration,
         })
     end
 end
+
+-- fill_rate = requests / duration
+local remaining = updates[1].balance
 
 -- if request is allowed then only update the count and processed timestamp
 for _, update in ipairs(updates) do
     redis.call('HMSET', update.key, "count", update.balance, "ts", now)
     redis.call('EXPIRE', update.key, update.ttl)
+    remaining = math.min(remaining, update.balance)
 end
 
-return 1
+return {1, remaining, 0}
 
 

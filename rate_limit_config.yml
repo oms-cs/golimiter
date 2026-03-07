@@ -1,13 +1,35 @@
 resources:
   - service: "product-service"
-    method: GET
-    path: "/products"
     algorithm: sliding_window_counter
-    rules:
-      limits:
-        - window_seconds: 10
-          limit: 10
-        - window_seconds: 60
-          limit: 50
-        - window_seconds: 86400
-          limit: 1000
+    paths:
+      - path: "/products"
+        method: "GET"
+        rules:
+          limits:
+            - window_seconds: 10
+              limit: 10
+            - window_seconds: 60
+              limit: 50
+            - window_seconds: 86400
+              limit: 1000
+      - path: "/products/:id"
+        method: "GET"
+        rules:
+          limits:
+            - window_seconds: 10
+              limit: 10
+            - window_seconds: 60
+              limit: 50
+            - window_seconds: 86400
+              limit: 1000
+      - path: "/products"
+        method: "POST"
+        rules:
+          limits:
+            - window_seconds: 10
+              limit: 10
+            - window_seconds: 60
+              limit: 50
+            - window_seconds: 86400
+              limit: 1000
+        

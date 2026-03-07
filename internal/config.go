@@ -11,11 +11,15 @@ type Config struct {
 }
 
 type Resource struct {
-	Service   string  `yaml:"service"`
-	Method    string  `yaml:"method"`
-	Path      string  `yaml:"path"`
-	Algorithm string  `yaml:"algorithm"`
-	Rules     RuleSet `yaml:"rules"`
+	Service   string `yaml:"service"`
+	Algorithm string `yaml:"algorithm"`
+	Paths     []Path `yaml:"paths"`
+}
+
+type Path struct {
+	Path   string  `yaml:"path"`
+	Method string  `yaml:"method"`
+	Rules  RuleSet `yaml:"rules"`
 }
 
 type RuleSet struct {

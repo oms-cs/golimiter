@@ -20,7 +20,7 @@ func (tb *tokenBucket) IsAllowed(req *proto.RateLimitRequest) bool {
 	ctx := context.Background()
 
 	//Read lua Script Path
-	filePath := filepath.Join("scripts", "leaky_bucket.lua")
+	filePath := filepath.Join("scripts", "token_bucket.lua")
 	keys := make([]string, len(req.Keys))
 
 	for _, key := range req.Keys {
