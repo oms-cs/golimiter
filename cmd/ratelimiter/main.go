@@ -27,7 +27,10 @@ func main() {
 	// load Rate Limiter config
 	loadPathMatcher(configs, pathMatcher)
 
-	serverConfig := app.Config{Port: "510001"}
+	// Get port from environment variable or use default
+	port := getEnvOrDefault("PORT", "510001")
+	serverConfig := app.Config{Port: port}
+
 	// start server
 	app.Run(serverConfig, pathMatcher)
 	log.Printf("server started on port %s \n", serverConfig.Port)
@@ -40,4 +43,11 @@ func loadPathMatcher(configs *internal.Config, pathMatcher *internal.PathMatcher
 			pathMatcher.Insert(&path, config.Service, config.Algorithm)
 		}
 	}
+}
+
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }

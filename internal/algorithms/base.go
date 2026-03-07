@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	proto "github.com/omscs/golimiter/gen/pb"
 	"github.com/omscs/golimiter/internal/infrastructure"
@@ -14,6 +15,46 @@ import (
 // RedisClient interface for better testability
 type RedisClient interface {
 	Eval(ctx context.Context, script string, keys []string, args ...interface{}) *redis.Cmd
+}
+
+// ScriptCache caches Lua scripts in memory
+type ScriptCache struct {
+	scripts map[string]string
+	mutex   sync.RWMutex
+}
+
+var scriptCache = &ScriptCache{
+	scripts: make(map[string]string),
+}
+
+// GetScript retrieves a script from cache or loads it from disk
+func (sc *ScriptCache) GetScript(scriptName string) (string, error) {
+	sc.mutex.RLock()
+	script, exists := sc.scripts[scriptName]
+	sc.mutex.RUnlock()
+
+	if exists {
+		return script, nil
+	}
+
+	sc.mutex.Lock()
+	defer sc.mutex.Unlock()
+
+	// Double-check after acquiring write lock
+	if script, exists := sc.scripts[scriptName]; exists {
+		return script, nil
+	}
+
+	// Load script from disk
+	scriptPath := filepath.Join("scripts", scriptName+".lua")
+	luaScript, err := os.ReadFile(scriptPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read Lua script %s: %w", scriptName, err)
+	}
+
+	scriptStr := string(luaScript)
+	sc.scripts[scriptName] = scriptStr
+	return scriptStr, nil
 }
 
 // BaseAlgorithm provides common functionality for all rate limiting algorithms
@@ -34,13 +75,12 @@ func NewBaseAlgorithm(scriptName string) *BaseAlgorithm {
 func (ba *BaseAlgorithm) ExecuteScript(req *proto.RateLimitRequest, limits []byte) (*proto.RateLimitResponse, error) {
 	fmt.Printf("Processing rate limit request for path: %s using algorithm: %s\n", req.Path, ba.scriptName)
 
-	// Load Lua script
-	scriptPath := filepath.Join("scripts", ba.scriptName+".lua")
-	luaScript, err := os.ReadFile(scriptPath)
+	// Get script from cache
+	luaScript, err := scriptCache.GetScript(ba.scriptName)
 	if err != nil {
 		return &proto.RateLimitResponse{
 			IsAllowed: false,
-		}, fmt.Errorf("failed to read Lua script %s: %w", ba.scriptName, err)
+		}, fmt.Errorf("failed to get Lua script %s: %w", ba.scriptName, err)
 	}
 
 	// Extract keys from request
@@ -51,7 +91,7 @@ func (ba *BaseAlgorithm) ExecuteScript(req *proto.RateLimitRequest, limits []byt
 
 	// Execute script
 	ctx := context.Background()
-	result, err := ba.redisClient.Eval(ctx, string(luaScript), keys).Result()
+	result, err := ba.redisClient.Eval(ctx, luaScript, keys).Result()
 	if err != nil {
 		return &proto.RateLimitResponse{
 			IsAllowed: false,
