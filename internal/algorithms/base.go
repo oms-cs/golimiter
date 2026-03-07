@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	proto "github.com/omscs/golimiter/gen/go"
+	proto "github.com/omscs/golimiter/gen/pb"
 	"github.com/omscs/golimiter/internal/infrastructure"
 	"github.com/redis/go-redis/v9"
 )
@@ -31,7 +31,7 @@ func NewBaseAlgorithm(scriptName string) *BaseAlgorithm {
 }
 
 // ExecuteScript executes the Lua script and returns the result
-func (ba *BaseAlgorithm) ExecuteScript(req *proto.RateLimitRequest) (*proto.RateLimitResponse, error) {
+func (ba *BaseAlgorithm) ExecuteScript(req *proto.RateLimitRequest, limits []byte) (*proto.RateLimitResponse, error) {
 	fmt.Printf("Processing rate limit request for path: %s using algorithm: %s\n", req.Path, ba.scriptName)
 
 	// Load Lua script

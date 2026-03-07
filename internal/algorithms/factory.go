@@ -65,6 +65,15 @@ func IsValidAlgorithm(algorithm AlgorithmType) bool {
 	return false
 }
 
+func GetAlgorithmType(algorithm string) (AlgorithmType, error) {
+	for _, supported := range GetSupportedAlgorithms() {
+		if algorithm == string(supported) {
+			return supported, nil
+		}
+	}
+	return "", fmt.Errorf("no such algorithm %s \n", algorithm)
+}
+
 // Convenience function for direct creation
 func CreateRateLimiter(algorithm AlgorithmType) (RateLimiter, error) {
 	factory := NewRateLimiterFactory()

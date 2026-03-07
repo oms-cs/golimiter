@@ -8,7 +8,7 @@ import (
 type Node struct {
 	children      map[string]*Node
 	wildcardChild *Node
-	rules         map[string]RuleSet
+	rules         map[string]*RuleSet
 }
 
 type ServiceConfig struct {
@@ -61,12 +61,12 @@ func (p *PathMatcher) Insert(path *Path, service string, algorithm string) {
 		}
 	}
 	if current.rules == nil {
-		current.rules = make(map[string]RuleSet)
+		current.rules = make(map[string]*RuleSet)
 	}
 	current.rules[path.Method] = path.Rules
 }
 
-func (p *PathMatcher) Search(path string, service string, method string) (RuleSet, error) {
+func (p *PathMatcher) Search(path string, service string, method string) (*RuleSet, string, error) {
 	if service == "" {
 		service = "default"
 	}
@@ -75,7 +75,7 @@ func (p *PathMatcher) Search(path string, service string, method string) (RuleSe
 	config, exists := p.services[service]
 
 	if !exists {
-		return RuleSet{}, fmt.Errorf("service %s not found", service)
+		return &RuleSet{}, "", fmt.Errorf("service %s not found", service)
 	}
 
 	parts := strings.Split(strings.Trim(path, "/"), "/")
@@ -87,21 +87,21 @@ func (p *PathMatcher) Search(path string, service string, method string) (RuleSe
 		} else if current.wildcardChild != nil {
 			current = current.wildcardChild
 		} else {
-			return RuleSet{}, fmt.Errorf("no rules available for path %s ", path)
+			return &RuleSet{}, "", fmt.Errorf("no rules available for path %s ", path)
 		}
 	}
 
 	rules, exists := current.rules[method]
 	if !exists {
-		return RuleSet{}, fmt.Errorf("no rules available for method, path %s %s", method, path)
+		return &RuleSet{}, "", fmt.Errorf("no rules available for method, path %s %s", method, path)
 	}
-	return rules, nil
+	return rules, config.algorithm, nil
 }
 
 func NewNode() *Node {
 	return &Node{
 		children:      make(map[string]*Node),
 		wildcardChild: nil,
-		rules:         make(map[string]RuleSet),
+		rules:         make(map[string]*RuleSet),
 	}
 }

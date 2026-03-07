@@ -17,9 +17,9 @@ type Resource struct {
 }
 
 type Path struct {
-	Path   string  `yaml:"path"`
-	Method string  `yaml:"method"`
-	Rules  RuleSet `yaml:"rules"`
+	Path   string   `yaml:"path"`
+	Method string   `yaml:"method"`
+	Rules  *RuleSet `yaml:"rules"`
 }
 
 type RuleSet struct {
