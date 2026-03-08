@@ -14,8 +14,8 @@ for i, limit in ipairs(limits) do
     local max_allowed = tonumber(limit[2])
     local weight = tonumber(limit[3] or 1)
     
-    for _, base_key in ipairs(KEYS) do
-        local ks = key_prefix .. base_key .. ":" .. duration
+    for _, key in ipairs(KEYS) do
+        local ks = key_prefix .. key .. ":" .. duration
         local window_start = now_sec - duration
 
         redis.call('ZREMRANGEBYSCORE', ks, '-inf', window_start)
