@@ -1,6 +1,6 @@
 resources:
   - service: "product-service"
-    algorithm: sliding_window_counter
+    algorithm: sliding_window_log
     paths:
       - path: "/products"
         method: "GET"

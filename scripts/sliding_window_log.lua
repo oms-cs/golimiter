@@ -1,47 +1,36 @@
 local limits = cjson.decode(ARGV[1])
+local now_ms = tonumber(ARGV[2])
+local now_sec = now_ms / 1000
+local weight = tonumber(ARGV[3] or 1)
 
-local now = tonumber(ARGV[2])
-
-local weight = tonumber(ARGV[3] or '1')
-
-local longest_duration = limits[1][1] or 0
-
-local saved_keys = {}
-
--- handle cleanup and limit checks
+local longest_duration = 0
+local updates = {}
+local global_min_remaining = 999999999
 
 for i, limit in ipairs(limits) do
-
-    local duration = limit[1]
+    local duration = tonumber(limit[1])
+    local max_allowed = tonumber(limit[2])
+    local precision = tonumber(limit[3] or duration)
+    
     longest_duration = math.max(longest_duration, duration)
-    local precision = limit[3] or duration
     precision = math.min(precision, duration)
     local blocks = math.ceil(duration / precision)
 
-    local saved = {}
-    table.insert(saved_keys, saved)
-
-    saved.block_id = math.floor(now / precision)
-    saved.trim_before = saved.block_id - blocks + 1
-    saved.count_key = duration .. ':' .. precision .. ':'
-    saved.ts_key = saved.count_key .. 'o'
+    local block_id = math.floor(now_sec / precision)
+    local trim_before = block_id - blocks + 1
+    local count_key_base = duration .. ':' .. precision .. ':'
+    local ts_key = count_key_base .. 'o'
 
     for j, key in ipairs(KEYS) do
-
-        local old_ts = redis.call('HGET', key, saved.ts_key)
-        old_ts = old_ts and tonumber(old_ts) or saved.trim_before
-        if old_ts > now then
-            return 1
-        end
-
-        -- discover what needs to be cleaned up
+        local old_ts = tonumber(redis.call('HGET', key, ts_key) or trim_before)
+        
+        -- 1. CLEANUP EXPIRED BLOCKS
         local decr = 0
         local dele = {}
-        local trim = math.min(saved.trim_before, old_ts + blocks)
+        local trim_to = math.min(trim_before, old_ts + blocks)
 
-        for old_block = old_ts, trim - 1 do
-
-            local bkey = saved.count_key .. old_block
+        for old_block = old_ts, trim_to - 1 do
+            local bkey = count_key_base .. old_block
             local bcount = redis.call('HGET', key, bkey)
             if bcount then
                 decr = decr + tonumber(bcount)
@@ -49,44 +38,62 @@ for i, limit in ipairs(limits) do
             end
         end
 
-        -- handle cleanup
-        local cur
+        local current_total = 0
         if #dele > 0 then
             redis.call('HDEL', key, unpack(dele))
-            cur = redis.call('HINCRBY', key, saved.count_key, -decr)
+            current_total = tonumber(redis.call('HINCRBY', key, count_key_base, -decr))
         else
-            cur = redis.call('HGET', key, saved.count_key)
+            current_total = tonumber(redis.call('HGET', key, count_key_base) or 0)
         end
 
-        -- check our limits
-        if tonumber(cur or '0') + weight > limit[2] then
-            return 1
+        -- 2. ACCURATE WAIT TIME CALCULATION
+        if current_total + weight > max_allowed then
+            local needed = (current_total + weight) - max_allowed
+            local found_decr = 0
+            local wait_time = 0
+
+            -- Look at active blocks starting from the oldest
+            for b = trim_before, block_id do
+                local bkey = count_key_base .. b
+                local bcount = tonumber(redis.call('HGET', key, bkey) or 0)
+                
+                if bcount > 0 then
+                    found_decr = found_decr + bcount
+                    if found_decr >= needed then
+                        -- The wait time is when THIS block falls out of the window
+                        -- A block 'b' falls out at: (b + blocks) * precision
+                        local expiry_ts = (b + blocks) * precision
+                        wait_time = math.max(0, expiry_ts - now_sec)
+                        break
+                    end
+                end
+            end
+            
+            -- If we still haven't found enough, wait for the full duration
+            if wait_time == 0 then wait_time = precision end
+            
+            return {0, 0, math.ceil(wait_time)}
         end
+
+        table.insert(updates, {
+            key = key,
+            ts_key = ts_key,
+            trim_before = trim_before,
+            count_key_base = count_key_base,
+            block_id = block_id,
+            remaining = max_allowed - (current_total + weight)
+        })
+        
+        global_min_remaining = math.min(global_min_remaining, max_allowed - (current_total + weight))
     end
 end
 
--- there is enough resources, update the counts
-
-for i, limit in ipairs(limits) do
-    local saved = saved_keys[i]
-
-    for j, key in ipairs(KEYS) do
-
-        -- update the current timestamp, count, and bucket count
-        redis.call('HSET', key, saved.ts_key, saved.trim_before)
-        redis.call('HINCRBY', key, saved.count_key, weight)
-        redis.call('HINCRBY', key, saved.count_key .. saved.block_id, weight)
-    end
+-- 3. COMMIT
+for _, u in ipairs(updates) do
+    redis.call('HSET', u.key, u.ts_key, u.trim_before)
+    redis.call('HINCRBY', u.key, u.count_key_base, weight)
+    redis.call('HINCRBY', u.key, u.count_key_base .. u.block_id, weight)
+    redis.call('EXPIRE', u.key, math.ceil(longest_duration))
 end
 
--- We calculated the longest-duration limit so we can EXPIRE
--- the whole HASH for quick and easy idle-time cleanup :)
-
-if longest_duration > 0 then
-    for _, key in ipairs(KEYS) do
-        redis.call('EXPIRE', key, longest_duration)
-    end
-end
-
-return 0
-
+return {1, global_min_remaining, 0}

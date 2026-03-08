@@ -11,6 +11,7 @@ const (
 	TokenBucketAlgorithm          AlgorithmType = "token_bucket"
 	SlidingWindowCounterAlgorithm AlgorithmType = "sliding_window_counter"
 	SlidingWindowLogAlgorithm     AlgorithmType = "sliding_window_log"
+	SlidingWindowSetAlgorithm     AlgorithmType = "sliding_window_set"
 )
 
 // RateLimiterFactory defines the interface for creating rate limiters
@@ -41,6 +42,8 @@ func (f *DefaultRateLimiterFactory) CreateRateLimiterWithConfig(algorithm Algori
 		return NewSlidingWindowCounter(), nil
 	case SlidingWindowLogAlgorithm:
 		return NewSlidingWindowLog(), nil
+	case SlidingWindowSetAlgorithm:
+		return NewSlidingWindowSet(), nil
 	default:
 		return nil, fmt.Errorf("unsupported rate limiting algorithm: %s", algorithm)
 	}
@@ -52,6 +55,7 @@ func GetSupportedAlgorithms() []AlgorithmType {
 		TokenBucketAlgorithm,
 		SlidingWindowCounterAlgorithm,
 		SlidingWindowLogAlgorithm,
+		SlidingWindowSetAlgorithm,
 	}
 }
 
