@@ -8,8 +8,10 @@ resources:
           limits:
             - window_seconds: 30
               limit: 10
+              precision: 10
             - window_seconds: 60
               limit: 12
+              precision: 10
       - path: "/products/:id"
         method: "GET"
         rules:

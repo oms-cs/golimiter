@@ -5,11 +5,11 @@ local key_prefix = "app:rate-limiter:sliding-window-counter:"
 
 local updates = {}
 local max_limit = 0
+local weight = tonumber(ARGV[3])
 
 for i, limit in ipairs(limits) do
     local duration = limit[1]
     local max_allowed = limit[2]
-    local weight = limit[3]
     
     max_limit = math.max(max_limit, max_allowed)
 

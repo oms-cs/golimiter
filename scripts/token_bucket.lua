@@ -4,13 +4,13 @@
 local limits = cjson.decode(ARGV[1])
 local now = tonumber(ARGV[2]) / 1000
 local key_prefix = "app:rate-limiter:token-bucket:"
+local weight = tonumber(ARGV[3])
 
 local updates = {}
 
 for i, limit in ipairs(limits) do
     local duration = tonumber(limit[1])
     local max_allowed = tonumber(limit[2])
-    local weight = tonumber(limit[3])
 
     for j, key in ipairs(KEYS) do
         local ks = key_prefix .. key .. ":" .. duration

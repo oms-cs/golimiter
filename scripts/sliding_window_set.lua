@@ -4,6 +4,7 @@
 local limits = cjson.decode(ARGV[1])
 local now_ms = tonumber(ARGV[2])
 local now_sec = now_ms / 1000
+local weight = tonumber(ARGV[3])
 
 local key_prefix = "app:rate-limiter:sliding-zset:"
 local check_results = {}
@@ -12,7 +13,6 @@ local max_wait_time = 0
 for i, limit in ipairs(limits) do
     local duration = tonumber(limit[1])
     local max_allowed = tonumber(limit[2])
-    local weight = tonumber(limit[3] or 1)
     
     for _, key in ipairs(KEYS) do
         local ks = key_prefix .. key .. ":" .. duration

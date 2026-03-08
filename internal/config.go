@@ -29,6 +29,7 @@ type RuleSet struct {
 type Limit struct {
 	WindowSeconds int `yaml:"window_seconds"`
 	Limit         int `yaml:"limit"`
+	Precision     int `yaml:"precision"`
 }
 
 func LoadConfig(filename string) (*Config, error) {

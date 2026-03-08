@@ -6,11 +6,14 @@ local weight = tonumber(ARGV[3] or 1)
 local longest_duration = 0
 local updates = {}
 local global_min_remaining = 999999999
+local key_prefix = "app:rate-limiter:sliding-window-log:"
+
 
 for i, limit in ipairs(limits) do
     local duration = tonumber(limit[1])
     local max_allowed = tonumber(limit[2])
     local precision = tonumber(limit[3] or duration)
+    redis.log(redis.LOG_WARNING, "Duration: " .. duration .. " Max allowed: " .. max_allowed .. " Precision: " .. precision)
     
     longest_duration = math.max(longest_duration, duration)
     precision = math.min(precision, duration)
@@ -22,7 +25,8 @@ for i, limit in ipairs(limits) do
     local ts_key = count_key_base .. 'o'
 
     for j, key in ipairs(KEYS) do
-        local old_ts = tonumber(redis.call('HGET', key, ts_key) or trim_before)
+        local ks = key_prefix .. key
+        local old_ts = tonumber(redis.call('HGET', ks, ts_key) or trim_before)
         
         -- 1. CLEANUP EXPIRED BLOCKS
         local decr = 0
@@ -31,7 +35,7 @@ for i, limit in ipairs(limits) do
 
         for old_block = old_ts, trim_to - 1 do
             local bkey = count_key_base .. old_block
-            local bcount = redis.call('HGET', key, bkey)
+            local bcount = redis.call('HGET', ks, bkey)
             if bcount then
                 decr = decr + tonumber(bcount)
                 table.insert(dele, bkey)
@@ -40,10 +44,10 @@ for i, limit in ipairs(limits) do
 
         local current_total = 0
         if #dele > 0 then
-            redis.call('HDEL', key, unpack(dele))
-            current_total = tonumber(redis.call('HINCRBY', key, count_key_base, -decr))
+            redis.call('HDEL', ks, unpack(dele))
+            current_total = tonumber(redis.call('HINCRBY', ks, count_key_base, -decr))
         else
-            current_total = tonumber(redis.call('HGET', key, count_key_base) or 0)
+            current_total = tonumber(redis.call('HGET', ks, count_key_base) or 0)
         end
 
         -- 2. ACCURATE WAIT TIME CALCULATION
@@ -55,7 +59,7 @@ for i, limit in ipairs(limits) do
             -- Look at active blocks starting from the oldest
             for b = trim_before, block_id do
                 local bkey = count_key_base .. b
-                local bcount = tonumber(redis.call('HGET', key, bkey) or 0)
+                local bcount = tonumber(redis.call('HGET', ks, bkey) or 0)
                 
                 if bcount > 0 then
                     found_decr = found_decr + bcount
@@ -71,12 +75,12 @@ for i, limit in ipairs(limits) do
             
             -- If we still haven't found enough, wait for the full duration
             if wait_time == 0 then wait_time = precision end
-            
+            redis.log(redis.LOG_WARNING, "Wait time: " .. wait_time)
             return {0, 0, math.ceil(wait_time)}
         end
 
         table.insert(updates, {
-            key = key,
+            key = ks,
             ts_key = ts_key,
             trim_before = trim_before,
             count_key_base = count_key_base,

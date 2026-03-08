@@ -74,7 +74,7 @@ func NewBaseAlgorithm(scriptName string) *BaseAlgorithm {
 }
 
 // ExecuteScript executes the Lua script and returns the result
-func (ba *BaseAlgorithm) ExecuteScript(req *proto.RateLimitRequest, limits []byte) (*proto.RateLimitResponse, error) {
+func (ba *BaseAlgorithm) ExecuteScript(req *proto.RateLimitRequest, limits []byte, weight int) (*proto.RateLimitResponse, error) {
 	fmt.Printf("Processing rate limit request for path: %s using algorithm: %s\n", req.Path, ba.scriptName)
 
 	limitsStr := string(limits)
@@ -96,7 +96,7 @@ func (ba *BaseAlgorithm) ExecuteScript(req *proto.RateLimitRequest, limits []byt
 	// Execute script
 	ctx := context.Background()
 	nowMs := time.Now().UnixMilli()
-	result, err := ba.redisClient.Eval(ctx, luaScript, keys, limitsStr, nowMs).Result()
+	result, err := ba.redisClient.Eval(ctx, luaScript, keys, limitsStr, nowMs, weight).Result()
 	if err != nil {
 		return &proto.RateLimitResponse{
 			IsAllowed: false,

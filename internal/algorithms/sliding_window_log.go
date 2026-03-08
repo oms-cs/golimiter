@@ -19,8 +19,8 @@ func NewSlidingWindowLog() RateLimiter {
 }
 
 // IsAllowed checks if the request is allowed based on sliding window log algorithm
-func (swl *SlidingWindowLog) IsAllowed(req *proto.RateLimitRequest, limits []byte) *proto.RateLimitResponse {
-	res, err := swl.ExecuteScript(req, limits)
+func (swl *SlidingWindowLog) IsAllowed(req *proto.RateLimitRequest, limits []byte, weight int) *proto.RateLimitResponse {
+	res, err := swl.ExecuteScript(req, limits, weight)
 	if err != nil {
 		// Log error but default to allowing the request to avoid service disruption
 		log.Printf("failed to execute script due to %v \n", err)

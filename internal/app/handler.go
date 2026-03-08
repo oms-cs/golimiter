@@ -51,7 +51,7 @@ func HandleRateLimiter(rules *internal.RuleSet, algorithm string, ctx context.Co
 	weight := 1
 
 	for _, rule := range rules.Limits {
-		limitValues = append(limitValues, []int{rule.WindowSeconds, rule.Limit, weight})
+		limitValues = append(limitValues, []int{rule.WindowSeconds, rule.Limit, rule.Precision})
 	}
 
 	//convert limits to json
@@ -62,5 +62,5 @@ func HandleRateLimiter(rules *internal.RuleSet, algorithm string, ctx context.Co
 	}
 
 	//return response
-	return rateLimiter.IsAllowed(req, jsonData), nil
+	return rateLimiter.IsAllowed(req, jsonData, weight), nil
 }

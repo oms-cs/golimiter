@@ -17,8 +17,8 @@ func NewTokenBucket() RateLimiter {
 }
 
 // IsAllowed checks if the request is allowed based on token bucket algorithm
-func (tb *TokenBucket) IsAllowed(req *proto.RateLimitRequest, limits []byte) *proto.RateLimitResponse {
-	res, err := tb.ExecuteScript(req, limits)
+func (tb *TokenBucket) IsAllowed(req *proto.RateLimitRequest, limits []byte, weight int) *proto.RateLimitResponse {
+	res, err := tb.ExecuteScript(req, limits, weight)
 	if err != nil {
 		// Log error but default to allowing the request to avoid service disruption
 		return &proto.RateLimitResponse{
