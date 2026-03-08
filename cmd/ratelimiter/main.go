@@ -28,11 +28,14 @@ func main() {
 	loadPathMatcher(configs, pathMatcher)
 
 	// Get port from environment variable or use default
-	port := getEnvOrDefault("PORT", "510001")
+	port := getEnvOrDefault("PORT", "50051")
 	serverConfig := app.Config{Port: port}
 
 	// start server
-	app.Run(serverConfig, pathMatcher)
+	if err := app.Run(serverConfig, pathMatcher); err != nil {
+		log.Printf("failed to start server on port %s , due to : %v \n", serverConfig.Port, err)
+		os.Exit(0)
+	}
 	log.Printf("server started on port %s \n", serverConfig.Port)
 }
 

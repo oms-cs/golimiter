@@ -6,12 +6,8 @@ resources:
         method: "GET"
         rules:
           limits:
-            - window_seconds: 10
-              limit: 10
             - window_seconds: 60
-              limit: 50
-            - window_seconds: 86400
-              limit: 1000
+              limit: 10
       - path: "/products/:id"
         method: "GET"
         rules:

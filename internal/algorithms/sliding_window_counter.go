@@ -1,6 +1,8 @@
 package algorithms
 
 import (
+	"log"
+
 	proto "github.com/omscs/golimiter/gen/pb"
 )
 
@@ -21,6 +23,7 @@ func (swc *SlidingWindowCounter) IsAllowed(req *proto.RateLimitRequest, limits [
 	res, err := swc.ExecuteScript(req, limits)
 	if err != nil {
 		// Log error but default to allowing the request to avoid service disruption
+		log.Printf("failed to execute script due to %v \n", err)
 		return &proto.RateLimitResponse{
 			IsAllowed: true,
 		}

@@ -3,9 +3,11 @@ package algorithms
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	proto "github.com/omscs/golimiter/gen/pb"
 	"github.com/omscs/golimiter/internal/infrastructure"
@@ -75,6 +77,8 @@ func NewBaseAlgorithm(scriptName string) *BaseAlgorithm {
 func (ba *BaseAlgorithm) ExecuteScript(req *proto.RateLimitRequest, limits []byte) (*proto.RateLimitResponse, error) {
 	fmt.Printf("Processing rate limit request for path: %s using algorithm: %s\n", req.Path, ba.scriptName)
 
+	limitsStr := string(limits)
+
 	// Get script from cache
 	luaScript, err := scriptCache.GetScript(ba.scriptName)
 	if err != nil {
@@ -91,7 +95,8 @@ func (ba *BaseAlgorithm) ExecuteScript(req *proto.RateLimitRequest, limits []byt
 
 	// Execute script
 	ctx := context.Background()
-	result, err := ba.redisClient.Eval(ctx, luaScript, keys).Result()
+	nowMs := time.Now().UnixMilli()
+	result, err := ba.redisClient.Eval(ctx, luaScript, keys, limitsStr, nowMs).Result()
 	if err != nil {
 		return &proto.RateLimitResponse{
 			IsAllowed: false,
@@ -101,26 +106,27 @@ func (ba *BaseAlgorithm) ExecuteScript(req *proto.RateLimitRequest, limits []byt
 	// Parse result
 	vals, ok := result.([]interface{})
 	if !ok || len(vals) == 0 {
+		log.Printf("unexpected result format from Lua script %v", vals)
 		return &proto.RateLimitResponse{
 			IsAllowed: false,
 		}, fmt.Errorf("unexpected result format from Lua script")
 	}
 
-	isAllowedVal, ok := vals[0].(int)
-	remaining, ok := vals[1].(int32)
+	log.Printf("vals : %v \n ", vals)
+	isAllowedVal, ok := vals[0].(int64)
+	remaining, ok := vals[1].(int64)
 	tryAgainDuration, ok := vals[2].(int64)
+
 	if !ok {
 		return &proto.RateLimitResponse{
 			IsAllowed: false,
 		}, fmt.Errorf("failed to convert result to int")
 	}
 
-	fmt.Printf("Rate limit result: %d\n", isAllowedVal)
-
 	// Parse the actual result (assuming "1" means allowed, "0" means denied)
 	return &proto.RateLimitResponse{
 		IsAllowed:        isAllowedVal == 1,
-		RemainingTokens:  remaining,
+		RemainingTokens:  int32(remaining),
 		TryAgainDuration: tryAgainDuration,
 	}, nil
 }
