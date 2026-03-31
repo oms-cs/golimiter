@@ -2,12 +2,16 @@ package app
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net"
+	"net/http"
 
 	proto "github.com/omscs/golimiter/gen/pb"
 	"github.com/omscs/golimiter/internal"
 	"google.golang.org/grpc"
+
+	grpc_prom "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type server struct {
@@ -18,37 +22,45 @@ type server struct {
 func (s *server) CheckLimit(ctx context.Context, req *proto.RateLimitRequest) (*proto.RateLimitResponse, error) {
 	// Validate input parameters
 	if req == nil {
-		log.Printf("Received nil request")
+		slog.Error("empty request")
 		return newDeniedResponse(), nil
 	}
 
 	if req.Path == "" {
-		log.Printf("Received request with empty path")
+		slog.Error("received request with no path")
 		return newDeniedResponse(), nil
 	}
 
 	if req.Method == "" {
-		log.Printf("Received request with empty method for path %s", req.Path)
+		slog.Error("received request with no method",
+			slog.String("path", req.Path),
+		)
 		return newDeniedResponse(), nil
 	}
 
 	if len(req.Keys) == 0 {
-		log.Printf("Received request with no keys for path %s, method %s", req.Path, req.Method)
+		slog.Error("received request with no keys",
+			slog.String("path", req.Path),
+			slog.String("method", req.Method),
+		)
 		return newDeniedResponse(), nil
 	}
 
 	// Validate keys
 	for i, key := range req.Keys {
 		if key.Value == "" {
-			log.Printf("Received request with empty key at index %d for path %s, method %s", i, req.Path, req.Method)
+			slog.Error("received request with empty key",
+				slog.Int("index", i),
+				slog.String("path", req.Path),
+				slog.String("method", req.Method),
+			)
 			return newDeniedResponse(), nil
 		}
 	}
 
-	log.Printf("Received: %v", req.GetPath())
 	rules, algorithm, err := s.matcher.Search(req.Path, req.Service, req.Method)
 	if err != nil {
-		log.Printf("No rules found for path %s, service %s, method %s: %v", req.Path, req.Service, req.Method, err)
+		slog.Error("no rules found", slog.String("path", req.Path), slog.String("service", req.Service), slog.String("method", req.Method), "error", err)
 		return newAllowedResponse(), nil
 	}
 
@@ -64,8 +76,19 @@ func Run(cfg Config, matcher *internal.PathMatcher) error {
 	if err != nil {
 		return err
 	}
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.StreamInterceptor(grpc_prom.StreamServerInterceptor),
+		grpc.UnaryInterceptor(grpc_prom.UnaryServerInterceptor),
+	)
+
+	grpc_prom.Register(s)
+	//enable histograms
+	grpc_prom.EnableHandlingTimeHistogram()
+
+	http.Handle("/metrics", promhttp.Handler())
+	go http.ListenAndServe(":9092", nil)
+
 	proto.RegisterGoLimiterServer(s, &server{matcher: matcher})
-	log.Printf("Server is running on port : %s... \n", cfg.Port)
+	slog.Debug("server is running on port", slog.String("port", cfg.Port))
 	return s.Serve(lis)
 }

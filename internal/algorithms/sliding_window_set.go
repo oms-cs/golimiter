@@ -1,7 +1,7 @@
 package algorithms
 
 import (
-	"log"
+	"log/slog"
 
 	proto "github.com/omscs/golimiter/gen/pb"
 )
@@ -23,7 +23,7 @@ func (sws *SlidingWindowSet) IsAllowed(req *proto.RateLimitRequest, limits []byt
 	res, err := sws.ExecuteScript(req, limits, weight)
 	if err != nil {
 		// Log error but default to allowing the request to avoid service disruption
-		log.Printf("failed to execute script due to %v \n", err)
+		slog.Error("failed to execute script", "error", err)
 		return &proto.RateLimitResponse{
 			IsAllowed: true,
 		}

@@ -3,7 +3,7 @@ package algorithms
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
@@ -51,7 +51,11 @@ func (sc *ScriptCache) GetScript(scriptName string) (string, error) {
 	scriptPath := filepath.Join("scripts", scriptName+".lua")
 	luaScript, err := os.ReadFile(scriptPath)
 	if err != nil {
-		return "", fmt.Errorf("failed to read Lua script %s: %w", scriptName, err)
+		slog.Error("failed to read Lua script",
+			slog.String("script", scriptName),
+			slog.Any("error", err),
+		)
+		return "", err
 	}
 
 	scriptStr := string(luaScript)
@@ -75,16 +79,17 @@ func NewBaseAlgorithm(scriptName string) *BaseAlgorithm {
 
 // ExecuteScript executes the Lua script and returns the result
 func (ba *BaseAlgorithm) ExecuteScript(req *proto.RateLimitRequest, limits []byte, weight int) (*proto.RateLimitResponse, error) {
-	fmt.Printf("Processing rate limit request for path: %s using algorithm: %s\n", req.Path, ba.scriptName)
+	slog.Info("Processing rate limit request", slog.String("path", req.Path), slog.String("algorithm", ba.scriptName))
 
 	limitsStr := string(limits)
 
 	// Get script from cache
 	luaScript, err := scriptCache.GetScript(ba.scriptName)
 	if err != nil {
+		slog.Error("Failed to load luascript", slog.String("script", luaScript), "error", err)
 		return &proto.RateLimitResponse{
 			IsAllowed: false,
-		}, fmt.Errorf("failed to get Lua script %s: %w", ba.scriptName, err)
+		}, err
 	}
 
 	// Extract keys from request
@@ -98,26 +103,28 @@ func (ba *BaseAlgorithm) ExecuteScript(req *proto.RateLimitRequest, limits []byt
 	nowMs := time.Now().UnixMilli()
 	result, err := ba.redisClient.Eval(ctx, luaScript, keys, limitsStr, nowMs, weight).Result()
 	if err != nil {
+		slog.Error("redis script evaluation failed", "error", err)
 		return &proto.RateLimitResponse{
 			IsAllowed: false,
-		}, fmt.Errorf("failed to execute Lua script: %w", err)
+		}, err
 	}
 
 	// Parse result
 	vals, ok := result.([]interface{})
 	if !ok || len(vals) == 0 {
-		log.Printf("unexpected result format from Lua script %v", vals)
+		slog.Info("unexpected result format from Lua script", "result", vals)
 		return &proto.RateLimitResponse{
 			IsAllowed: false,
 		}, fmt.Errorf("unexpected result format from Lua script")
 	}
 
-	log.Printf("vals : %v \n ", vals)
+	slog.Info("redis script evaluated", "result", vals)
 	isAllowedVal, ok := vals[0].(int64)
 	remaining, ok := vals[1].(int64)
 	tryAgainDuration, ok := vals[2].(int64)
 
 	if !ok {
+		slog.Error("failed to cast the results")
 		return &proto.RateLimitResponse{
 			IsAllowed: false,
 		}, fmt.Errorf("failed to convert result to int")

@@ -1,6 +1,8 @@
 package algorithms
 
 import (
+	"log/slog"
+
 	proto "github.com/omscs/golimiter/gen/pb"
 )
 
@@ -21,6 +23,7 @@ func (tb *TokenBucket) IsAllowed(req *proto.RateLimitRequest, limits []byte, wei
 	res, err := tb.ExecuteScript(req, limits, weight)
 	if err != nil {
 		// Log error but default to allowing the request to avoid service disruption
+		slog.Error("failed to execute script", "error", err)
 		return &proto.RateLimitResponse{
 			IsAllowed: true,
 		}

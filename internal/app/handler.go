@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"log/slog"
 
 	proto "github.com/omscs/golimiter/gen/pb"
 	"github.com/omscs/golimiter/internal"
@@ -35,14 +35,14 @@ func HandleRateLimiter(rules *internal.RuleSet, algorithm string, ctx context.Co
 	// check algorithm support
 	alg, err1 := algorithms.GetAlgorithmType(algorithm)
 	if err1 != nil {
-		log.Printf("Unsupported algorithm %s: %v", algorithm, err1)
+		slog.Error("unsupported algorithm", slog.String("algorithm", algorithm), "error", err1)
 		return newAllowedResponse(), nil
 	}
 
 	//initiate rate limiter from factory
 	rateLimiter, err2 := factory.CreateRateLimiterWithConfig(alg, nil)
 	if err2 != nil {
-		log.Printf("Failed to create rate limiter for algorithm %s: %v", algorithm, err2)
+		slog.Error("failed to instantiate rate_limiter", slog.String("algorithm", algorithm), "error", err2)
 		return newAllowedResponse(), nil
 	}
 
@@ -57,7 +57,7 @@ func HandleRateLimiter(rules *internal.RuleSet, algorithm string, ctx context.Co
 	//convert limits to json
 	jsonData, err := json.Marshal(limitValues)
 	if err != nil {
-		log.Printf("Failed to marshal limits: %v", err)
+		slog.Error("failed to marshal limits", "error", err)
 		return newAllowedResponse(), nil
 	}
 

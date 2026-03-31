@@ -1,8 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/omscs/golimiter/internal"
@@ -10,14 +9,21 @@ import (
 )
 
 func main() {
-	fmt.Printf("Hello world! \n")
-
 	configFile := "rate_limit_config.yml"
+
+	//log handler
+	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug, // Defaults to Info if not set
+	})
+
+	// 2. Make it the global logger
+	logger := slog.New(handler)
+	slog.SetDefault(logger)
 
 	//load configs from file
 	configs, err := internal.LoadConfig(configFile)
 	if err != nil {
-		fmt.Printf("Failed to Load Rate Limiter Configs : %v \n", err.Error())
+		slog.Error("Failed to Load Rate Limiter Configs: ", "error", err)
 		os.Exit(0)
 	}
 
@@ -33,10 +39,10 @@ func main() {
 
 	// start server
 	if err := app.Run(serverConfig, pathMatcher); err != nil {
-		log.Printf("failed to start server on port %s , due to : %v \n", serverConfig.Port, err)
+		slog.Error("failed to start server", slog.String("port", serverConfig.Port), "error", err)
 		os.Exit(0)
 	}
-	log.Printf("server started on port %s \n", serverConfig.Port)
+	slog.Info("server started", slog.String("port", serverConfig.Port))
 }
 
 func loadPathMatcher(configs *internal.Config, pathMatcher *internal.PathMatcher) {
